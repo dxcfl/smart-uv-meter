@@ -1,17 +1,17 @@
 
 /*
-WioTerminalUvSmartMeter.ino
+  WioTerminalUvSmartMeter.ino
 
     Read more: https://https://github.com/dxcfl/uv-monitoring_wio-terminal#readme
     Git: https://github.com/dxcfl/uv-monitoring_wio-terminal
     (c) 2022 by dxcfl
 */
 
-#define DEBUG 1
+// #define DEBUG 1
 #include "debug2serial.h"
 
 /* GUI
- */
+*/
 
 #include "GUI.cpp"
 
@@ -25,7 +25,7 @@ void my_print(lv_log_level_t level, const char *file, uint32_t line, const char 
 #endif
 
 /* INCLUDES
- */
+*/
 
 #include <SPI.h>
 #include <Wire.h>
@@ -35,7 +35,7 @@ void my_print(lv_log_level_t level, const char *file, uint32_t line, const char 
 #include <math.h>
 
 /* GLOBALS
- */
+*/
 
 // Sensors
 Adafruit_BME280 bme280;
@@ -44,6 +44,9 @@ Adafruit_VEML6070 veml6070 = Adafruit_VEML6070();
 // Miscellaneous
 
 #define CYCLE_TIME 1000 // ms
+
+#define CYCLE_TIME_TELEMETRY 60000 // ms
+
 
 #define SEALEVELPRESSURE_HPA (1013.25) // For altitude meassuerment with the BME280
 
@@ -63,9 +66,10 @@ Adafruit_VEML6070 veml6070 = Adafruit_VEML6070();
 #define VEML6070_INTEGRATION_TIME VEML6070_4_T
 
 uint32_t updateTime = 0; // time for next update
+uint32_t telemetryTime = 0; // time for next update
 
 /* SETUP
- */
+*/
 
 void setup()
 {
@@ -103,10 +107,16 @@ void setup()
   veml6070.begin(VEML6070_INTEGRATION_TIME); // pass in the integration time constant
   DEBUG_SERIAL_PRINTLN("SETUP: VEML6070 initialized.");
 
-  DEBUG_SERIAL_PRINTLN("SETUP: initialized.");
-
   DEBUG_SERIAL_PRINT("SETUP: Cycle time (ms) = ");
   DEBUG_SERIAL_PRINT(CYCLE_TIME);
+
+  DEBUG_SERIAL_PRINT("SETUP: Telemetry cycle time (ms) = ");
+  DEBUG_SERIAL_PRINT(CYCLE_TIME_TELEMETRY); 
+
+  DEBUG_SERIAL_PRINTLN("SETUP: Telemetry ...");
+  telemetrySetup();
+
+  DEBUG_SERIAL_PRINTLN("SETUP: initialized.");
 }
 
 void loop()
@@ -137,6 +147,12 @@ void loop()
     DEBUG_SERIAL_PRINTLN("LOOP: GUI: Updating display  ...");
     GUI::update_labels(temperature, pressure, humidity, uv, uvi);
     GUI::update_meter(risk);
+
+    if (telemetryTime <= millis())
+    {
+      telemetryTime = millis() + CYCLE_TIME_TELEMETRY; // time for next update
+      telemetrySendValues(temperature, humidity, uv, uvi);
+    }
   }
 
 #ifdef DEBUG_VERBOSE
@@ -146,23 +162,23 @@ void loop()
 }
 
 /*
- * uv_index()
- *
- * expects integration time and the measurement value from the UV sensor as input
- * and returns the corresponding risk level:
- * 0: Low
- * 1: Moderate
- * 2: High
- * 3: Very High
- * 4: Extreme
- */
+   uv_index()
+
+   expects integration time and the measurement value from the UV sensor as input
+   and returns the corresponding risk level:
+   0: Low
+   1: Moderate
+   2: High
+   3: Very High
+   4: Extreme
+*/
 unsigned short uv_index(veml6070_integrationtime_t it, unsigned uv, unsigned short *uvi)
 {
   /*
-  See https://www.vishay.com/docs/84310/designingveml6070.pdf , Table 3:
-  Together with the RSET value of 270 kΩ and the integration time 1T,
-  the parameters below map UV light data values to  UV index (risk level)
-  and UVI values.
+    See https://www.vishay.com/docs/84310/designingveml6070.pdf , Table 3:
+    Together with the RSET value of 270 kΩ and the integration time 1T,
+    the parameters below map UV light data values to  UV index (risk level)
+    and UVI values.
   */
   const unsigned uv_high_1t[4] = {560, 1120, 1494, 2054};
   const unsigned index_low[4] = {0, 3, 6, 8};
@@ -171,16 +187,16 @@ unsigned short uv_index(veml6070_integrationtime_t it, unsigned uv, unsigned sho
   unsigned k = 0;
   switch (it)
   {
-  case VEML6070_HALF_T:
-  case VEML6070_1_T:
-    k = 1;
-    break;
-  case VEML6070_2_T:
-    k = 2;
-    break;
-  case VEML6070_4_T:
-    k = 3;
-    break;
+    case VEML6070_HALF_T:
+    case VEML6070_1_T:
+      k = 1;
+      break;
+    case VEML6070_2_T:
+      k = 2;
+      break;
+    case VEML6070_4_T:
+      k = 3;
+      break;
   }
 
   *uvi = 11; // if above any range

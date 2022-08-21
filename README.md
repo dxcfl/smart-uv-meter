@@ -1,14 +1,14 @@
 # uv-monitoring_wio-terminal
 Solar ultraviolet radiation exposure monitoring with Seed Wio Terminal
 
-# Introduction
+## Introduction
 For many years there has been a growing concern that anthropogenic damage to the Earth's stratospheric ozone layer will lead to an increase of solar ultraviolet (UV) radiation reaching the Earth's surface, with a consequent adverse impact on human health. UV-related diseases, especially skin cancer, are causing problems on public well-being around the world, as well as resulting in high and increasing healthcare costs. Ozone depletion and climate change are aggravating this situation, Temperature changes and an increasing number of cloudless, sunny days not only result in heatwaves and droughts but are also exposing humans to higher levels of solar UV radiation. The risk of developing skin cancer is increasing.
 
 The solution implements an UV radiation exposure monitoring system to assist in the prevention of diseases caused by over exposition to solar UV radiation through warning messages with preventive regarding the monitored exposure level.
 
 It can act either as a remote sensor unit or as personal dosimeter, continuously measuring the UV index and other environmental parameters (humidity, temperature). It can calculate the actual individual risk for individuals in the monitored area or for the person wearing it. The resulting data can be used to issue categorized advisory messages for preventive measures (e.g., apply sunscreen, wearing protective clothes, limit exposure time etc.).
 
-The Wio Terminal connected to the appropriate sensors (UV radiation, temperature, humidity, etc.) can be used to collect and process the regarded environmental data. The display can be used to show the aggregated data, risk analysis and protection advice to the user. Additionally, aggregated data could be transmitted (e.g., via LoRaWAN) to an edge gateway device for long time data recording and evaluation.
+The Wio Terminal connected to the appropriate sensors (UV radiation, temperature, humidity, etc.) can be used to collect and process the regarded environmental data. The display can be used to show the aggregated data, risk analysis and protection advice to the user. Additionally, obtained and aggregated data could be transmitted (e.g., via WiFi, LoRaWAN etc.) to an edge gateway device or a cloud service for long time data recording and evaluation.
 
 ## Components
 
@@ -49,6 +49,7 @@ Grove - Temp&Humi&Barometer Sensor (BME280) is a breakout board for Bosch BMP280
 * [LvGL Graphics Library for Wio Terminal](https://github.com/Seeed-Studio/Seeed_Arduino_LvGL)
 * [Adafruit VEML6070 Library](https://github.com/adafruit/Adafruit_VEML6070)
 * [Adafruit BME280 Library](https://github.com/adafruit/Adafruit_BME280_Library)
+* [ThingSpeak](https://thingspeak.com/)
 
 #### LvGL Graphics Library for Wio Terminal
 
@@ -58,15 +59,14 @@ The LvGL (Light and Versatile Graphics Library) is an open-source graphics libra
 
 * Wires
 
-## Wiring
+## Implementation
+
+### Wiring
 
 For Grove sensor boards, just connect both sensor (via hub) to the Grove I2C Port on Wio Terminal, for other sensor boards connect VIN,GND,SCL and SDA accordingly:
 ![wiring](/assets/images/wiring_diagramm.png)
 
 ![wiring](/assets/images/wiring_photo.jpg)
-
-
-## Software
 
 ### UV Index & Risk Level
 
@@ -81,9 +81,11 @@ Through absorption of the earth's atmosphere in the ozone layer, the UVC spectru
 
 UV radiation intensity is measured in micro-watts per square-centimeter (μW / cm²). The VEML6070 sensor measures radiation in a spectrum from  300 nm to  400 nm, so it can only detect UVA radiation.
 
-In order to estimate the energy behind UV radiation and the risk level associated with it, the UV index was established. It is an international standard measurement of the strength of the sunburn-producing UV radiation at a particular place and time and it is primarily used in daily and hourly forecasts aimed at the general public. The UV index value appears on a linear scale of 0 to ≥ 11. 
+In order to estimate the energy behind UV radiation and the risk level associated with it, the UV Index was established. The UV Index describes the expected daily peak level of the erythemal UV irradiance at ground level.
+Its an open-top llinears scale - 0 to ≥ 11, giving guideline values for the UV irradiance. The higher the UV Index, the higher the UV irradiance and the faster / the more severe a sunburn can occur when skin is not protected.
+The UV Index has been defined by the WHO and is uniform worldwide - e.g, a UV Index of 7 in Europe means exactly the same as the same value in Africa or North America. 
 
-![uvi scale](/assets/images/uviscale.jpg)
+![uvi scale](/assets/images/uv-index-en__bfs_de.png)
 
 Since deriving the UV index directly from the irradiance measured by the sensor requires a quite complex calculation, weighted according to a curve and integrated over the whole spectrum, the [Designing the VEML6070 UV Light Sensor
 Into Applications](https://www.vishay.com/docs/84310/designingveml6070.pdf) guide by Vishay Semiconductors proposes to estimate the energy behind UV radiation and the risk level associated with it, by simply reading out the irradiance value from the VEML6070 sensor and comparing it with pre-defined values.
@@ -165,12 +167,20 @@ The derrived risk level is displayed as a line meter, changing its background co
 
 ![screen](/assets/images/screen.JPG)
 
+### Telemetry
+ 
+[ThingSpeak](https://thingspeak.com/) is used to collect, record and visualize the obtained data.
+
+![thingspeak](/assets/images/thingspeak.png)
+
 ## Test
 
-On a very sunny (and warm) Sunday afternoon tests have been performed with the setting RSET = 270 kΩ; IT = 2T.
+On a very sunny (and warm) Sunday afternoon tests have been performed with the setting RSET = 270 kΩ; IT = 4T.
 
 ![test](/assets/images/test1.jpg)
 
-In the browser window the official readings (UV index 5) from a nearby ( ~ 30 km) weather station published by the "Office for Radiation Protection" is shown. The UV index shown on the devices was changing between 5 and 6:
+![test](/assets/images/test3.jpg)
+
+In the browser window the official readings (UV index 3) from a nearby ( ~ 30 km) weather station published by the "Office for Radiation Protection" is shown. The UV index shown on the devices was changing between 3 and 4:
 
 ![test](/assets/images/test2.jpg)
