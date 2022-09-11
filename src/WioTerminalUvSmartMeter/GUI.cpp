@@ -214,7 +214,8 @@ public:
     {
         const char *rating[] = {"     low", "moderate", "    high", "very high", "extreme"};
         const lv_color_t bg_color[] = {LV_COLOR_GREEN, LV_COLOR_YELLOW, LV_COLOR_ORANGE, LV_COLOR_RED, LV_COLOR_PURPLE};
-        if ( risk > 4 ) return; 
+        if (risk > 4)
+            return;
         lv_linemeter_set_value(risk_meter, risk);
         lv_label_set_text(risk_label, rating[risk]);
         lv_obj_set_style_local_bg_color(risk_meter, LV_LINEMETER_PART_MAIN, LV_STATE_DEFAULT, bg_color[risk]);

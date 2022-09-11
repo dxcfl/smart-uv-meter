@@ -7,7 +7,7 @@
     (c) 2022 by dxcfl
 */
 
-// #define DEBUG 1
+#define DEBUG 1
 #include "debug2serial.h"
 
 /* GUI
@@ -23,6 +23,14 @@ void my_print(lv_log_level_t level, const char *file, uint32_t line, const char 
   delay(100);
 }
 #endif
+
+/* TELEMETRY
+*/
+// #define TELEMETRY 1
+// #define TELEMETRY_WIFI_THINGSPEAK
+// #define TELEMETRY_LORAWAN_HELIUM 1
+// #define TELEMETRY_REPORT_UVI_CHANGES_ONLY 1
+// #define TELEMETRY_UPDATE_TIME 60 
 
 /* INCLUDES
 */
@@ -42,12 +50,8 @@ Adafruit_BME280 bme280;
 Adafruit_VEML6070 veml6070 = Adafruit_VEML6070();
 
 // Miscellaneous
-
 #define CYCLE_TIME 1000 // ms
-
-#define CYCLE_TIME_TELEMETRY 60000 // ms
-
-
+#define CYCLE_TIME_TELEMETRY TELEMETRY_UPDATE_TIME * 1000 // ms
 #define SEALEVELPRESSURE_HPA (1013.25) // For altitude meassuerment with the BME280
 
 /*
@@ -86,6 +90,9 @@ void setup()
   GUI::screen();
   DEBUG_SERIAL_PRINTLN("SETUP: GUI ready.");
 
+  DEBUG_SERIAL_PRINTLN("SETUP: Telemetry ...");
+  telemetrySetup();
+
   DEBUG_SERIAL_PRINTLN("SETUP: BME280 ...");
   unsigned status;
   status = bme280.begin(0x76);
@@ -108,13 +115,10 @@ void setup()
   DEBUG_SERIAL_PRINTLN("SETUP: VEML6070 initialized.");
 
   DEBUG_SERIAL_PRINT("SETUP: Cycle time (ms) = ");
-  DEBUG_SERIAL_PRINT(CYCLE_TIME);
+  DEBUG_SERIAL_PRINTLN(CYCLE_TIME);
 
   DEBUG_SERIAL_PRINT("SETUP: Telemetry cycle time (ms) = ");
-  DEBUG_SERIAL_PRINT(CYCLE_TIME_TELEMETRY); 
-
-  DEBUG_SERIAL_PRINTLN("SETUP: Telemetry ...");
-  telemetrySetup();
+  DEBUG_SERIAL_PRINTLN(CYCLE_TIME_TELEMETRY); 
 
   DEBUG_SERIAL_PRINTLN("SETUP: initialized.");
 }
